@@ -14,26 +14,8 @@
     {:state :intake-fail :reason "Missing :operation or :effect"}))
 
 (defn advise-proposal [store proposal]
-  "Advise: generate reasoning and confidence."
-  (let [op-id (:operation proposal)]
-    (case op-id
-      :schedule-member-event
-      (advisor/generate-member-event-proposal store (:member-id proposal) (:event-id proposal))
-
-      :coordinate-dues-processing-logistics
-      (advisor/generate-dues-logistics-proposal store (:member-id proposal))
-
-      :coordinate-supply-request
-      (advisor/generate-supply-request-proposal store)
-
-      :schedule-staff-shift-proposal
-      (advisor/generate-staff-shift-proposal store (:member-id proposal))
-
-      :flag-safety-concern
-      (advisor/generate-safety-concern-proposal store (:member-id proposal) (:concern-type proposal))
-
-      ;; unknown op
-      proposal)))
+  "Advise: add reasoning and confidence to the proposal."
+  (advisor/advise-proposal store proposal))
 
 (defn govern-proposal [store proposal]
   "Govern: apply three HARD checks."

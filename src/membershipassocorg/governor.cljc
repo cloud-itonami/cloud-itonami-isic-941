@@ -104,7 +104,10 @@
   "Apply all three HARD checks. Any violation is a permanent rejection
   with no override path."
   [store proposal]
-  (let [member-violations (member-unverified-violations store (:member-id proposal))
+  (let [;; Only check member verification if member-id is present
+        member-violations (if (:member-id proposal)
+                            (member-unverified-violations store (:member-id proposal))
+                            [])
         effect-violations (effect-not-propose-violations proposal)
         scope-violations (scope-exclusion-violations proposal)
         all-violations (concat member-violations effect-violations scope-violations)]
