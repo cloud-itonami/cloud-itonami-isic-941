@@ -1,80 +1,11 @@
-{:blueprint/id "cloud-itonami-isic-941"
- :blueprint/name "Membership Association Administrative Coordination"
- :blueprint/isic "941"
- :blueprint/domain "membership-association-administration"
- :blueprint/description
- "LLM-driven administrative coordination for membership organizations (trade
-  associations, chambers of commerce, professional bodies). Covers member enrollment
-  logistics, event/meeting scheduling, dues-processing logistics, and facility
-  management. Explicitly excludes membership-eligibility/expulsion, professional
-  certification/credentialing, advocacy-policy content, dues-amount/fee-waiver
-  decisions, and disciplinary action."
-
- :blueprint/scope
- {:included ["member-enrollment-logistics"
-             "event-meeting-scheduling"
-             "dues-processing-logistics"
-             "supply-coordination"
-             "staff-shift-scheduling"]
-  :excluded ["membership-eligibility-decisions"
-             "professional-certification"
-             "advocacy-policy-content"
-             "dues-amount-decisions"
-             "fee-waiver-decisions"
-             "disciplinary-action"]}
-
- :blueprint/operations
- [{:op/id :schedule-member-event
-   :op/description "Event/meeting scheduling logistics"
-   :op/effect :propose}
-  {:op/id :coordinate-dues-processing-logistics
-   :op/description "Administrative dues-tracking/reminder logistics (never fee-waiver)"
-   :op/effect :propose}
-  {:op/id :coordinate-supply-request
-   :op/description "Non-content consumables supply coordination"
-   :op/effect :propose}
-  {:op/id :schedule-staff-shift-proposal
-   :op/description "Administrative staff shift PROPOSAL only (never binding)"
-   :op/effect :propose}
-  {:op/id :flag-safety-concern
-   :op/description "Facility/member-conduct concerns for HUMAN review (always escalates)"
-   :op/effect :propose}]
-
- :blueprint/governor
- {:hard-checks
-  [{:check/id :member-unverified
-    :check/rule "Target member must be registered AND verified"
-    :check/overridable? false}
-   {:check/id :effect-not-propose
-    :check/rule "Effect must be :propose"
-    :check/overridable? false}
-   {:check/id :scope-exclusion
-    :check/rule "No membership-eligibility, certification, advocacy-policy, dues-waiver, or disciplinary decisions"
-    :check/overridable? false}]
-  :escalate-ops [:flag-safety-concern]
-  :confidence-floor 0.6}
-
- :blueprint/phases
- [{:phase/id 0
-   :phase/name "read-only"
-   :phase/auto #{}}
-  {:phase/id 1
-   :phase/name "event-scheduling + dues-logistics"
-   :phase/auto #{:schedule-member-event :coordinate-dues-processing-logistics}}
-  {:phase/id 2
-   :phase/name "+ supply + staff-shift"
-   :phase/auto #{:schedule-member-event
-                  :coordinate-dues-processing-logistics
-                  :coordinate-supply-request
-                  :schedule-staff-shift-proposal}}
-  {:phase/id 3
-   :phase/name "auto-commit with escalation"
-   :phase/auto #{:schedule-member-event
-                  :coordinate-dues-processing-logistics
-                  :coordinate-supply-request
-                  :schedule-staff-shift-proposal}
-   :phase/always-escalate #{:flag-safety-concern}}]
-
- :blueprint/adr "ADR-2607154300"
- :blueprint/wave "4"
- :blueprint/status "implemented"}
+{:itonami.blueprint/id "cloud-itonami-isic-941"
+ :itonami.blueprint/name "Activities of Business, Employers and Professional Membership Organizations - Administrative Coordination"
+ :itonami.blueprint/isic-rev4 "941"
+ :itonami.blueprint/domain :services/membership-association-coordination
+ :itonami.blueprint/license "AGPL-3.0"
+ :itonami.blueprint/social-impact [:operational-efficiency :administrative-transparency :member-services-access]
+ :itonami.blueprint/governor :membershipassocorg-governor
+ :itonami.blueprint/robotics false
+ :itonami.blueprint/required-technologies [:identity :forms :dmn :bpmn :audit-ledger]
+ :itonami.blueprint/status :public-oss
+ :itonami.blueprint/maturity :implemented}
