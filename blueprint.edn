@@ -8,4 +8,28 @@
  :itonami.blueprint/robotics false
  :itonami.blueprint/required-technologies [:identity :forms :dmn :bpmn :audit-ledger]
  :itonami.blueprint/status :public-oss
- :itonami.blueprint/maturity :implemented}
+ :itonami.blueprint/maturity :implemented
+ :itonami.blueprint/implemented-slice
+ "MembershipAssocAdvisor ⊣ Governor (three HARD, permanent,
+ un-overridable checks: member-unverified, effect-not-propose,
+ scope-exclusion), a real compiled langgraph-clj StateGraph
+ (langgraph.graph, membershipassocorg.operation/build: intake -> advise
+ -> govern -> decide -> commit | request-approval -> commit | hold),
+ rollout-phase gate (membershipassocorg.phase/gate, phases 0-3), and an
+ append-only audit ledger + coordination log
+ (membershipassocorg.store/append-ledger! + commit-record!, both a
+ MemStore deftype and a DatomicStore backed by langchain.db via
+ langchain-store.core). A back-office ADMINISTRATIVE COORDINATION actor
+ for membership organizations (trade associations, chambers of
+ commerce, professional bodies) -- not membership-eligibility,
+ certification, advocacy-policy, dues-amount, or disciplinary-action
+ authority. Five ops (`:schedule-member-event` /
+ `:coordinate-dues-processing-logistics` / `:coordinate-supply-request`
+ / `:schedule-staff-shift-proposal` / `:flag-safety-concern`), all
+ `:effect :propose` only. `:flag-safety-concern` ALWAYS escalates to a
+ human operator via the compiled graph's `:request-approval` node
+ (`interrupt-before`, checkpoint-based resume); other ops auto-commit
+ only once their phase enables them (phase 3 = full auto-commit).
+ Every commit/hold/approval-rejected decision lands in the append-only
+ ledger -- 34 tests / 75 assertions green (`clojure -M:dev:test`), demo
+ runnable end-to-end against both Store backends (`clojure -M:dev:run`)."}

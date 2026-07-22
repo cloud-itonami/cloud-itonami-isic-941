@@ -8,8 +8,7 @@
   3. Scope exclusion — any proposal touching membership-eligibility/expulsion,
      professional-certification/credentialing, advocacy-position/policy-content,
      dues-amount/fee-waiver, or disciplinary action is permanently blocked."
-  (:require [membershipassocorg.store :as store]
-            [clojure.string :as str]))
+  (:require [membershipassocorg.store :as store]))
 
 ;; ---------------------- hard checks ----------------------
 
