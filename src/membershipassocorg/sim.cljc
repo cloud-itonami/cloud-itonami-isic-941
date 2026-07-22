@@ -1,95 +1,85 @@
 (ns membershipassocorg.sim
-  "Demo simulation: 5 scenarios covering happy path, hard checks, and escalation."
-  (:require [membershipassocorg.store :as store]
-            [membershipassocorg.operation :as operation]))
+  "Demo driver -- `clojure -M:dev:run`. Walks the membership-association
+  administrative coordination actor through a clean phase-3 auto-commit,
+  an always-escalate safety-concern flag (human approves), a phase-1
+  supply-request escalation (human rejects), and a hard-hold
+  (unverified member), then prints the resulting audit ledger and
+  coordination log. Mirrors `cerealops.sim` (cloud-itonami-isic-0111)."
+  (:require [langgraph.graph :as g]
+            [membershipassocorg.operation :as operation]
+            [membershipassocorg.store :as store]))
 
-;; ---------------------- demo scenarios ----------------------
+(def coordinator {:actor-id "coordinator-01" :role :association-staff :phase 3})
+(def coordinator-phase-1 {:actor-id "coordinator-01" :role :association-staff :phase 1})
 
-(defn scenario-1-happy-path []
-  "Scenario 1: Happy path — schedule member event for verified member."
-  (println "\n[Scenario 1] Happy Path: Schedule Member Event")
-  (let [s (store/make-store)
-        result (operation/run-proposal s
-                 {:operation :schedule-member-event
-                  :member-id "member-1"
-                  :event-id "event-1"
-                  :effect :propose})]
-    (println (str "  Result: " (:action result)))
-    (assert (= :pending-approval (:action result)))
-    (println "  ✓ PASS")))
+(defn- exec-op [actor tid request context]
+  (g/run* actor {:request request :context context} {:thread-id tid}))
 
-(defn scenario-2-unverified-member []
-  "Scenario 2: Hard check — unverified member blocked."
-  (println "\n[Scenario 2] Hard Check: Unverified Member Blocked")
-  (let [s (store/make-store)
-        result (operation/run-proposal s
-                 {:operation :schedule-member-event
-                  :member-id "member-3"
-                  :event-id "event-1"
-                  :effect :propose})]
-    (println (str "  Result: " (:action result)))
-    (assert (= :held (:action result)))
-    (println "  ✓ PASS")))
+(defn- approve! [actor tid]
+  (g/run* actor {:approval {:status :approved :by "ops-director-01"}}
+          {:thread-id tid :resume? true}))
 
-(defn scenario-3-membership-eligibility-blocked []
-  "Scenario 3: Scope exclusion — membership-eligibility decision blocked."
-  (println "\n[Scenario 3] Scope Exclusion: Membership-Eligibility Blocked")
-  (let [s (store/make-store)
-        result (operation/run-proposal s
-                 {:operation :coordinate-dues-processing-logistics
-                  :member-id "member-1"
-                  :description "update membership eligibility"
-                  :effect :propose})]
-    (println (str "  Result: " (:action result)))
-    (assert (= :held (:action result)))
-    (println "  ✓ PASS")))
+(defn- reject! [actor tid]
+  (g/run* actor {:approval {:status :rejected :by "ops-director-01"}}
+          {:thread-id tid :resume? true}))
 
-(defn scenario-4-certification-blocked []
-  "Scenario 4: Scope exclusion — professional certification decision blocked."
-  (println "\n[Scenario 4] Scope Exclusion: Certification Blocked")
-  (let [s (store/make-store)
-        result (operation/run-proposal s
-                 {:operation :schedule-staff-shift-proposal
-                  :member-id "member-1"
-                  :description "verify professional credentialing"
-                  :effect :propose})]
-    (println (str "  Result: " (:action result)))
-    (assert (= :held (:action result)))
-    (println "  ✓ PASS")))
+(defn demo
+  "Run the compiled StateGraph through a commit path, an
+  escalate->approve->commit path, an escalate->reject->hold path, and
+  a hard-hold path; print each result and the final audit ledger +
+  coordination log."
+  []
+  (let [st (store/make-store)
+        actor (operation/build st)]
 
-(defn scenario-5-safety-escalation []
-  "Scenario 5: Escalation — safety/conduct concern always escalates."
-  (println "\n[Scenario 5] Escalation: Safety Concern Escalates")
-  (let [s (store/make-store)
-        result (operation/run-proposal s
-                 {:operation :flag-safety-concern
-                  :member-id "member-1"
-                  :concern-type "member-conduct-issue"
-                  :description "Member conduct concern for review"
-                  :effect :propose})]
-    (println (str "  Result: " (:action result)))
-    (assert (= :escalated (:action result)))
-    (println "  ✓ PASS")))
+    (println "=== Membership Association Coordination Actor Demo ===")
 
-;; ---------------------- master sim runner ----------------------
+    (println "\n== schedule-member-event member-1 (phase-3, governor-clean -> commit) ==")
+    (println (exec-op actor "t1"
+                      {:operation :schedule-member-event :member-id "member-1"
+                       :event-id "event-1" :effect :propose}
+                      coordinator))
 
-(defn run-all-scenarios []
-  (println "╔════════════════════════════════════════════════════════════╗")
-  (println "║ ISIC-941 Membership Association Coordination Actor         ║")
-  (println "║ Simulation: 5 Scenarios                                    ║")
-  (println "╚════════════════════════════════════════════════════════════╝")
+    (println "\n== flag-safety-concern member-1 (ALWAYS escalates -- director approves) ==")
+    (let [r (exec-op actor "t2"
+                     {:operation :flag-safety-concern :member-id "member-1"
+                      :concern-type "member-conduct-issue"
+                      :description "Member conduct concern for review"
+                      :effect :propose}
+                     coordinator)]
+      (println r)
+      (println "-- ops director approves --")
+      (println (approve! actor "t2")))
 
-  (scenario-1-happy-path)
-  (scenario-2-unverified-member)
-  (scenario-3-membership-eligibility-blocked)
-  (scenario-4-certification-blocked)
-  (scenario-5-safety-escalation)
+    (println "\n== coordinate-supply-request (phase-1, not yet auto-commit -> escalate -- director rejects) ==")
+    (let [r (exec-op actor "t3"
+                     {:operation :coordinate-supply-request :member-id "member-1"
+                      :description "Order name badges for annual gala" :effect :propose}
+                     coordinator-phase-1)]
+      (println r)
+      (println "-- ops director rejects --")
+      (println (reject! actor "t3")))
 
-  (println "\n╔════════════════════════════════════════════════════════════╗")
-  (println "║ All scenarios passed!                                      ║")
-  (println "╚════════════════════════════════════════════════════════════╝\n")
-  0)
+    (println "\n== schedule-member-event member-3 (unverified -> HARD hold, no interrupt) ==")
+    (println (exec-op actor "t4"
+                      {:operation :schedule-member-event :member-id "member-3"
+                       :event-id "event-1" :effect :propose}
+                      coordinator))
 
-#?(:clj
-   (defn -main [& args]
-     (run-all-scenarios)))
+    (println "\n== audit ledger ==")
+    (doseq [f (store/ledger st)] (println f))
+
+    (println "\n== coordination log (committed records) ==")
+    (doseq [r (store/coordination-log st)] (println r))
+
+    {:ledger (store/ledger st) :coordination-log (store/coordination-log st)}))
+
+(defn -main
+  "clojure -M:run entrypoint."
+  [& _args]
+  (demo))
+
+(comment
+  ;; In a real REPL:
+  (demo)
+  )
