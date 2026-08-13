@@ -14,7 +14,15 @@
         ;; membershipassocorg.store's DatomicStore uses it instead of
         ;; rolling its own enc/dec* two-liner.
         io.github.kotoba-lang/langchain-store
-        {:local/root "../../kotoba-lang/langchain-store"}}
+        {:local/root "../../kotoba-lang/langchain-store"}
+        ;; jp-go-digital-design-system (DADS) -- this workspace's BASE design
+        ;; system. Used ONLY at build time by `membershipassocorg.render-html`
+        ;; to skin docs/samples/operator-console.html; no actor/runtime code
+        ;; depends on it. Pinned by git sha (not :local/root) so a standalone
+        ;; fork outside the monorepo checkout can still regenerate the sample.
+        io.github.kotoba-lang/jp-go-digital-design-system
+        {:git/url "https://github.com/kotoba-lang/jp-go-digital-design-system"
+         :git/sha "83db99546eabc53613ae826ea41d1533a3c574af"}}
  :aliases
  {;; offline workspace dev -- pin transitive langchain to local checkout
   :dev {:override-deps
@@ -22,6 +30,12 @@
          {:local/root "../../kotoba-lang/langchain"}}}
   ;; clojure -M:dev:run  -> drive the demo through one OperationActor
   :run {:main-opts ["-m" "membershipassocorg.sim"]}
+  ;; clojure -M:dev:render-html [out-file] -> regenerate
+  ;; docs/samples/operator-console.html by ACTUALLY EXECUTING the real
+  ;; actor (advisor -> governor -> phase gate -> store) through
+  ;; langgraph's `run*`, never a hand-written HTML string. Refuses to
+  ;; write the file at all if that run produced zero HARD governor holds.
+  :render-html {:main-opts ["-m" "membershipassocorg.render-html"]}
   :test {:extra-paths ["test"]
          :extra-deps {io.github.cognitect-labs/test-runner
                       {:git/tag "v0.5.1" :git/sha "dfb30dd"}}
