@@ -29,7 +29,7 @@ Safety and conduct concerns always escalate to humans, even if governance passes
 Run the comprehensive test suite to verify all hard checks:
 
 ```bash
-nbb -m membershipassocorg.test
+kbb --backend sci -m membershipassocorg.test
 ```
 
 All 20 tests must pass before deployment.

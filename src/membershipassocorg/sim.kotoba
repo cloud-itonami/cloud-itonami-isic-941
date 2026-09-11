@@ -1,5 +1,5 @@
 (ns membershipassocorg.sim
-  "Demo driver -- `clojure -M:dev:run`. Walks the membership-association
+  "Demo driver -- `kbb -M:dev:run`. Walks the membership-association
   administrative coordination actor through a clean phase-3 auto-commit,
   an always-escalate safety-concern flag (human approves), a phase-1
   supply-request escalation (human rejects), and a hard-hold
@@ -75,7 +75,7 @@
     {:ledger (store/ledger st) :coordination-log (store/coordination-log st)}))
 
 (defn -main
-  "clojure -M:run entrypoint."
+  "kbb -M:run entrypoint."
   [& _args]
   (demo))
 

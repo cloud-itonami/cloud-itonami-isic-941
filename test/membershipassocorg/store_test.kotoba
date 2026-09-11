@@ -1,7 +1,7 @@
 (ns membershipassocorg.store-test
   "Preserves the original test/membershipassocorg/test.cljc `test-store`
   assertions (converted from bare `assert` to `clojure.test`'s
-  `deftest`/`is` so `clojure -M:dev:test` actually runs them)."
+  `deftest`/`is` so `kbb -M:dev:test` actually runs them)."
   (:require [clojure.test :refer [deftest is testing]]
             [membershipassocorg.store :as store]))
 
