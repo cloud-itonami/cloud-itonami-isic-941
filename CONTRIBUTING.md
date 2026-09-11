@@ -8,7 +8,7 @@ Thank you for your interest in contributing to this project.
 2. Create a feature branch
 3. Make your changes
 4. Add or update tests
-5. Ensure all tests pass: `nbb -m membershipassocorg.test`
+5. Ensure all tests pass: `kbb --backend sci -m membershipassocorg.test`
 6. Submit a pull request
 
 ## Guidelines

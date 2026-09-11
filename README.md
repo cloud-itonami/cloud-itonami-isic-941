@@ -50,13 +50,13 @@ This actor provides LLM-driven administrative coordination for membership organi
 ### Tests (via nbb)
 
 ```bash
-nbb -m membershipassocorg.test
+kbb --backend sci -m membershipassocorg.test
 ```
 
 ### Simulation (via nbb)
 
 ```bash
-nbb -m membershipassocorg.sim
+kbb --backend sci -m membershipassocorg.sim
 ```
 
 ## Test Coverage

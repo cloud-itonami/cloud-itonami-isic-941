@@ -31,5 +31,5 @@
  (`interrupt-before`, checkpoint-based resume); other ops auto-commit
  only once their phase enables them (phase 3 = full auto-commit).
  Every commit/hold/approval-rejected decision lands in the append-only
- ledger -- 34 tests / 75 assertions green (`clojure -M:dev:test`), demo
- runnable end-to-end against both Store backends (`clojure -M:dev:run`)."}
+ ledger -- 34 tests / 75 assertions green (`kbb -M:dev:test`), demo
+ runnable end-to-end against both Store backends (`kbb -M:dev:run`)."}
